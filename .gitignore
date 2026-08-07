@@ -1,0 +1,25 @@
+# --- Python environments / caches ---
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+
+# --- Large inputs: drop your own videos into capture/, not tracked in git ---
+capture/*
+!capture/.gitkeep
+
+# --- Generated data: regenerated per run; transferred by zipping, not git ---
+output/*
+!output/.gitkeep
+
+# --- Not part of the Python pipeline ---
+VideoTo3D/
+VIdeoTo3D/
+unity_export/
+report_assets/
+
+# --- OS cruft ---
+Thumbs.db
+.DS_Store
