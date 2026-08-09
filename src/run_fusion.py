@@ -151,11 +151,23 @@ def main():
         print(f"loaded {len(depth_cache)} precomputed depth maps from "
               f"{args.tag}_depths{args.depths_from}.pkl (offline re-fuse; no depth recompute)")
 
+    # On-disk per-camera depth cache so a crashed dense stage can RESUME instead of
+    # recomputing every map (enabled by --save-depths). Each map is written
+    # atomically (temp file then rename), so a crash mid-write cannot corrupt it.
+    cache_dir = OUT_DIR / f"{args.tag}_depthcache{args.out_suffix}"
+    if args.save_depths and args.depths_from is None:
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
     def get_depth(cam_order):
         if cam_order in depth_cache:
             return depth_cache[cam_order]
         if args.depths_from is not None:
             return None  # only the saved maps are available in offline mode
+        cpath = (cache_dir / f"cam{cam_order}.npy") if args.save_depths else None
+        if cpath is not None and cpath.exists():
+            depth = np.load(cpath)          # resume: reuse a checkpointed map
+            depth_cache[cam_order] = depth
+            return depth
         ref_gray = gray(cam_order)
         nbrs = neighbors_of(cam_order)
         src = [gray(c) for c in nbrs]
@@ -170,6 +182,10 @@ def main():
                 ps.depth_hypotheses(d_min, d_max, args.planes),
                 window=args.window, cost_agg_radius=0, speckle_win=0)
         depth_cache[cam_order] = depth
+        if cpath is not None:                # atomic checkpoint for resume
+            tmp = cache_dir / f"cam{cam_order}.tmp.npy"
+            np.save(str(tmp), depth)
+            tmp.replace(cpath)
         return depth
 
     refs = list(range(args.cam_start, cam_end, args.every))
@@ -181,6 +197,10 @@ def main():
         method = "PatchMatch" if args.patchmatch else f"plane-sweep ({args.planes} planes)"
         print(f"\n=== Stage 3: computing {len(needed)} depth maps ({method}, scale {s}) ===",
               flush=True)
+        if args.save_depths:
+            done = len(list(cache_dir.glob("cam*.npy")))
+            if done:
+                print(f"  (resuming: {done} depth maps already checkpointed on disk)", flush=True)
         td = time.time()
         for k, cam in enumerate(needed, 1):
             get_depth(cam)
