@@ -81,6 +81,14 @@ def main():
     o3d.io.write_triangle_mesh(str(out), mesh)
     print(f"Saved {out}")
 
+    # self-documenting build params (read by export_for_unity -> scene_info.json)
+    import json
+    meta = {"smooth": args.smooth, "poisson_depth": args.depth,
+            "density_quantile": args.density_quantile,
+            "vertices": len(mesh.vertices), "triangles": len(mesh.triangles),
+            "source_cloud": ply_path.name}
+    (OUT_DIR / f"{tag}_mesh{args.out_suffix}_meta.json").write_text(json.dumps(meta, indent=2))
+
     # best-effort offscreen preview (legacy GL; skip if the context can't render)
     try:
         vis = o3d.visualization.Visualizer()

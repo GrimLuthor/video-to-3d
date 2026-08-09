@@ -53,7 +53,9 @@ and a bin. Calibration in `src/calibration.py` (video-mode K, checkerboard).
 - `longer_walk_incr_dense_b.ply` — stride-15 reference cloud.
 
 ## Unity assets (`Final/unity_export/`) — for the SIDE-BY-SIDE fly-through
-- `mesh_scene.glb` — 800k-tri vertex-coloured mesh (import via **glTFast**).
+- `mesh_scene.glb` — **full-resolution** vertex-coloured mesh, Taubin smoothing 1
+  (import via **glTFast**). Not decimated (user runs on an RTX 3070). Per-scene tri
+  counts in `scene_info.json` (`mesh.triangles`, `mesh.smoothing_iterations`).
 - `pointcloud_scene.ply` — dense cloud (import via **Pcx**; use "Point" mode).
 - `scene_info.json` — machine-readable scene stats for any info/description panel:
   `scene`, `source_video`, `mesh{triangles,vertices}`, `pointcloud{points}`,

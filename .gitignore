@@ -19,6 +19,17 @@ VideoTo3D/
 VIdeoTo3D/
 unity_export/
 report_assets/
+partner_guide/
+report/
+
+# --- LaTeX build artifacts (in case any .tex is ever tracked) ---
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
 
 # --- OS cruft ---
 Thumbs.db
