@@ -15,6 +15,17 @@ parallel, then the results zipped back.
 and the interactive Unity viewer (mesh vs. point cloud, with the nearest real frame
 shown alongside the view). A still gallery is in [`media/GALLERY.md`](media/GALLERY.md).
 
+## Downloads
+
+Prebuilt viewer, exported 3D assets, and the source videos are on Google Drive —
+no build step required:
+
+**[⬇ Download folder](https://drive.google.com/drive/folders/122Sn61TLV2FvIv6QcKYfbAaIMkctk2dS?usp=sharing)**
+
+- `viewer_win.zip` — standalone Windows build of the interactive viewer (unzip and run `VIdeoTo3D.exe`).
+- `unity_assets.zip` — every scene's mesh + point cloud (+ camera poses and frame thumbnails).
+- `videos/` — the source phone videos.
+
 ## Setup (fresh machine)
 
 Use **Python 3.11 or 3.12** (this was built on 3.12; open3d needs a matching wheel).
