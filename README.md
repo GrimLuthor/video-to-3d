@@ -9,6 +9,12 @@ generated outputs, and report images are intentionally not tracked (see
 `.gitignore`). It's meant to be cloned on a second machine to process videos in
 parallel, then the results zipped back.
 
+## Demo
+
+▶️ **[Video walkthrough](https://youtu.be/Eb8VIMXfWzk)** — every reconstructed scene
+and the interactive Unity viewer (mesh vs. point cloud, with the nearest real frame
+shown alongside the view). A still gallery is in [`media/GALLERY.md`](media/GALLERY.md).
+
 ## Setup (fresh machine)
 
 Use **Python 3.11 or 3.12** (this was built on 3.12; open3d needs a matching wheel).

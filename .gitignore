@@ -21,6 +21,7 @@ unity_export/
 report_assets/
 partner_guide/
 report/
+viewer_build/
 
 # --- LaTeX build artifacts (in case any .tex is ever tracked) ---
 *.aux
