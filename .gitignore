@@ -35,3 +35,13 @@ viewer_build/
 # --- OS cruft ---
 Thumbs.db
 .DS_Store
+
+# --- Part B report images + the reference paper (not pipeline code) ---
+report_assets_partB/
+An Approach to Robust ICP Initialization.pdf
+
+# --- stray Open3D viewer setting dumps ---
+RenderOption_*.json
+
+# --- machine-specific overnight batch helper (absolute paths) ---
+overnight_batch.ps1

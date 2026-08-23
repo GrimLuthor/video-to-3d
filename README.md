@@ -11,9 +11,10 @@ parallel, then the results zipped back.
 
 ## Demo
 
-▶️ **[Video walkthrough](https://youtu.be/Eb8VIMXfWzk)** — every reconstructed scene
-and the interactive Unity viewer (mesh vs. point cloud, with the nearest real frame
-shown alongside the view). A still gallery is in [`media/GALLERY.md`](media/GALLERY.md).
+▶️ **[Video walkthroughs (playlist)](https://www.youtube.com/playlist?list=PLQ1XqiA4sMEs)**
+— every reconstructed scene, the orbited objects, and the two-capture merging, all in the
+interactive Unity viewer (mesh vs. point cloud, with the nearest real frame shown alongside
+the view). A still gallery is in [`media/GALLERY.md`](media/GALLERY.md).
 
 ## Downloads
 
@@ -83,6 +84,53 @@ Tuning knobs worth knowing:
 Progress prints live to the console (SfM registration + BA RMSE; dense stage has a
 per-depth-map ETA). Runtime is dominated by the dense stage (~15–20s per frame).
 
+## Part B & C — object loops and merging two captures
+
+Part A reconstructs a *scene* from a walk-past video. Part B/C instead **orbit a single
+object** in a loop, so the loop can be closed and the object cropped out of its
+background, and then **merge two separate loops of the same object** into one model.
+Everything is in `src/partB/` and does not touch the Part A pipeline; see
+[`PART_B_SUMMARY.md`](PART_B_SUMMARY.md) for the full writeup and the method background.
+
+```bash
+# 1) Loop-closed SfM of an orbit (like run_incremental_sfm, + loop closure)
+python src/partB/run_loop_sfm.py capture/myobject.mp4 5 myobject_loop --window 10
+#    --no-loop  runs the same pipeline WITHOUT loop closure (the ablation)
+
+# 2) Dense MVS + fusion (same runner as Part A; the loop bundle is phase-0)
+python src/run_fusion.py myobject_loop --save-depths
+#    run_fusion's voxel is ABSOLUTE, so a small-scale reconstruction over-merges;
+#    re-fuse finer from the saved depths:
+#    python src/run_fusion.py myobject_loop --depths-from "" --voxel <~0.002*orbit_radius> --out-suffix _fine
+
+# 3) Crop the object out of its background (automatic from the camera geometry)
+python src/partB/crop_to_orbit_center.py myobject_loop --ply output/myobject_loop_dense.ply --frac 0.8
+```
+
+Then merge two captures of the same object with ellipsoid ICP (Kolpakov & Werman,
+extended to also recover the unknown scale):
+
+```bash
+# register SOURCE onto TARGET  (--src/--tgt-recon enable the gravity up-gate)
+python src/partB/run_combine.py output/objB_crop.ply output/objA_crop.ply --tag obj_pair \
+    --src-recon output/objB_loop_reconstruction.pkl --tgt-recon output/objA_loop_reconstruction.pkl
+#    --init-mode {einit,identity,centroid} = the ablation; --yaw-search N helps near-symmetric objects
+python src/partB/view_overlay.py obj_pair          # interactive red/blue toggle overlay
+
+# export the aligned pair for the Unity two-video viewer (poses for BOTH captures)
+python src/partB/export_pair_for_unity.py --pair obj \
+    --tgt-recon output/objA_loop_reconstruction.pkl --tgt-cloud output/obj_pair_tgt_aligned.ply \
+    --src-recon output/objB_loop_reconstruction.pkl --src-cloud output/obj_pair_src_aligned.ply \
+    --src-input output/objB_crop.ply
+```
+
+Two things worth knowing:
+- This works only for a **complete, orbited object** — both loops must see it from all
+  sides. It does *not* merge two ordinary scene walks; `PART_B_SUMMARY.md` explains why
+  (the covariance ellipsoid is sampling-dependent).
+- It works best on an **asymmetric, textured** object. A round or symmetric object leaves
+  a residual rotation that geometry alone cannot fix, and colour has to break the tie.
+
 ## Transferring results back to the main machine
 
 After a run, zip the `output/` files for your tag and copy them over. The ones
@@ -102,7 +150,8 @@ On the main machine, drop them into `output/`, then run the Unity export
 
 ## Layout
 
-- `src/` — all pipeline code (SfM, MVS, fusion, mesh, exporters, viewers, utils).
+- `src/` — Part A pipeline code (SfM, MVS, fusion, mesh, exporters, viewers, utils).
+- `src/partB/` — Part B/C: loop-closed object SfM, orbit crop, and ellipsoid-ICP merging.
 - `calibration/` — checkerboard image for `calibrate_from_video.py`.
 - `capture/`, `output/` — created locally; git-ignored (drop videos in / results out).
-- `PROJECT_SUMMARY.md`, `plan.md` — design notes and roadmap (background context).
+- `PROJECT_SUMMARY.md`, `PART_B_SUMMARY.md`, `plan.md` — design notes and roadmap (background context).
